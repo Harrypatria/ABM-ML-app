@@ -2,5 +2,7 @@
   "name": "Attrition Predictor Pro",
   "description": "Production-grade ML employee attrition prediction and retention command center built on the ITDO framework with SHAP explanations.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

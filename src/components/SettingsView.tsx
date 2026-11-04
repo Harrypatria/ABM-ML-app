@@ -10,6 +10,7 @@ import {
   Download,
   Database,
   RefreshCw,
+  AlertTriangle,
 } from 'lucide-react';
 import {
   getSettings,
@@ -27,6 +28,7 @@ export const SettingsView: React.FC = () => {
   const [newPartnerName, setNewPartnerName] = useState('');
   const [savedFeedback, setSavedFeedback] = useState<string | null>(null);
   const [isReloading, setIsReloading] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,13 +67,12 @@ export const SettingsView: React.FC = () => {
     }));
   };
 
-  const handleResetData = () => {
-    if (window.confirm('Reset all employee records, alerts, and tasks to original IBM HR benchmark defaults?')) {
-      resetAllDataToDefault();
-      setSettingsState(getSettings());
-      setSavedFeedback('All data has been reset to defaults.');
-      setTimeout(() => setSavedFeedback(null), 3000);
-    }
+  const executeReset = () => {
+    resetAllDataToDefault();
+    setSettingsState(getSettings());
+    setShowResetConfirm(false);
+    setSavedFeedback('All data has been reset to defaults.');
+    setTimeout(() => setSavedFeedback(null), 3000);
   };
 
   const handleExportJSON = () => {
@@ -94,34 +95,37 @@ export const SettingsView: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border">
         <div>
-          <h2 className="text-2xl font-display font-bold text-slate-900">
-            System Settings & Parameters
+          <h2 className="text-2xl font-display font-bold text-foreground">
+            System settings
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
             Configure risk trigger thresholds, financial replacement multipliers, and HR team assignments.
           </p>
         </div>
 
         {savedFeedback && (
-          <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold animate-fadeIn">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+          <div
+            role="status"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-accent border border-border text-accent-foreground text-xs font-semibold animate-fadeIn"
+          >
+            <CheckCircle2 className="w-4 h-4 text-primary" aria-hidden="true" />
             <span>{savedFeedback}</span>
           </div>
         )}
       </div>
 
       {/* Section 00: Attached Dataset Status & Sync */}
-      <div className="bg-white border border-cyan-200 rounded-2xl p-6 shadow-xs space-y-4">
+      <div className="bg-card border border-border rounded-2xl p-6 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Benchmark Dataset (Attached Data Foundation)</span>
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-600" aria-hidden="true" />
+              <span>Benchmark dataset</span>
             </h3>
-            <p className="text-xs text-slate-600 mt-1">
-              File: <code className="font-mono text-cyan-800 font-semibold">HR-Employee-Attrition.csv</code> (1,470 records active)
+            <p className="text-xs text-muted-foreground mt-1">
+              File: <code className="font-mono text-foreground font-semibold">HR-Employee-Attrition.csv</code> (1,470 records active)
             </p>
           </div>
 
@@ -129,33 +133,34 @@ export const SettingsView: React.FC = () => {
             type="button"
             onClick={handleReloadAttachedCsv}
             disabled={isReloading}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-cyan-50 text-cyan-800 border border-cyan-200 hover:bg-cyan-100 transition-colors disabled:opacity-50 cursor-pointer shadow-2xs"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-accent text-accent-foreground border border-border hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden transition-colors disabled:opacity-50 cursor-pointer shadow-2xs"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isReloading ? 'animate-spin' : ''}`} />
-            <span>{isReloading ? 'Reloading...' : 'Reload 1,470 Records'}</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${isReloading ? 'animate-spin' : ''}`} aria-hidden="true" />
+            <span>{isReloading ? 'Reloading...' : 'Reload 1,470 records'}</span>
           </button>
         </div>
 
-        <p className="text-xs text-slate-500 leading-relaxed">
-          All employee profiles, historical departure labels, workload metrics, and salary bands are continuously synchronized with your attached benchmark dataset.
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Employee profiles, historical departure labels, workload metrics, and salary bands are synchronized with the attached benchmark dataset.
         </p>
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
         {/* Risk Threshold & Exposure Multipliers */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-5">
-          <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-            01. Flight Risk Thresholds
+        <div className="bg-card border border-border rounded-2xl p-6 shadow-xs space-y-5">
+          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">
+            01. Flight risk thresholds
           </h3>
 
           <div>
             <div className="flex items-center justify-between text-xs mb-1.5">
-              <span className="text-slate-700 font-semibold">Critical Alert Trigger Probability</span>
-              <span className="font-mono text-cyan-800 font-bold tabular-nums">
+              <label htmlFor="setting-alert-threshold" className="text-foreground font-semibold">Critical alert trigger probability</label>
+              <span className="font-mono text-foreground font-bold tabular-nums">
                 {(settings.alertThreshold * 100).toFixed(0)}%
               </span>
             </div>
             <input
+              id="setting-alert-threshold"
               type="range"
               min="0.50"
               max="0.85"
@@ -167,21 +172,22 @@ export const SettingsView: React.FC = () => {
                   alertThreshold: Number(e.target.value),
                 }))
               }
-              className="w-full accent-cyan-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
+              className="w-full accent-primary h-1.5 bg-muted rounded-lg cursor-pointer"
             />
-            <p className="text-[11px] text-slate-500 mt-1.5">
-              Employees with predicted departure probability at or above this threshold trigger escalations in the Alerts queue. Recommended standard: 70%.
+            <p className="text-[11px] text-muted-foreground mt-1.5">
+              Employees with predicted departure probability at or above this threshold trigger escalations in the alerts queue. Standard baseline: 70%.
             </p>
           </div>
 
-          <div className="pt-2 border-t border-slate-100">
+          <div className="pt-2 border-t border-border">
             <div className="flex items-center justify-between text-xs mb-1.5">
-              <span className="text-slate-700 font-semibold">Voluntary Departure Cost Multiplier</span>
-              <span className="font-mono text-amber-700 font-bold tabular-nums">
-                {settings.costMultiplier.toFixed(2)}x Annual Base Salary
+              <label htmlFor="setting-cost-multiplier" className="text-foreground font-semibold">Voluntary departure cost multiplier</label>
+              <span className="font-mono text-foreground font-bold tabular-nums">
+                {settings.costMultiplier.toFixed(2)}x annual salary
               </span>
             </div>
             <input
+              id="setting-cost-multiplier"
               type="range"
               min="1.0"
               max="2.5"
@@ -193,84 +199,118 @@ export const SettingsView: React.FC = () => {
                   costMultiplier: Number(e.target.value),
                 }))
               }
-              className="w-full accent-amber-600 h-1.5 bg-slate-200 rounded-lg cursor-pointer"
+              className="w-full accent-primary h-1.5 bg-muted rounded-lg cursor-pointer"
             />
-            <p className="text-[11px] text-slate-500 mt-1.5">
-              Industry standard multiplier reflecting recruitment fees, onboarding ramp-up, and lost operational productivity per departure.
+            <p className="text-[11px] text-muted-foreground mt-1.5">
+              Reflects recruitment search fees, onboarding ramp-up, and lost team productivity per departure.
             </p>
           </div>
         </div>
 
         {/* HR Business Partners */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
-          <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-            02. HR Business Partner Routing Directory
+        <div className="bg-card border border-border rounded-2xl p-6 shadow-xs space-y-4">
+          <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">
+            02. HR partner routing directory
           </h3>
 
           <div className="space-y-2">
             {settings.hrPartners.map((partner, index) => (
               <div
-                key={index}
-                className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs"
+                key={partner}
+                className="flex items-center justify-between p-3 rounded-xl bg-muted/40 border border-border text-xs"
               >
-                <span className="text-slate-800 font-medium">{partner}</span>
+                <span className="text-foreground font-medium">{partner}</span>
                 <button
                   type="button"
                   onClick={() => handleRemovePartner(index)}
-                  className="text-slate-400 hover:text-rose-600 p-1 rounded transition-colors cursor-pointer"
+                  aria-label={`Remove ${partner}`}
+                  className="text-muted-foreground hover:text-destructive focus-visible:ring-2 focus-visible:ring-destructive focus-visible:outline-hidden p-1 rounded transition-colors cursor-pointer"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </button>
               </div>
             ))}
           </div>
 
           <div className="flex items-center gap-2 pt-2">
+            <label htmlFor="new-partner-input" className="sr-only">New partner name</label>
             <input
+              id="new-partner-input"
               type="text"
               placeholder="e.g. Jordan Smith (Lead HRBP, Engineering)"
               value={newPartnerName}
               onChange={(e) => setNewPartnerName(e.target.value)}
-              className="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-600"
+              className="flex-1 bg-card border border-input rounded-xl px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:border-primary focus-visible:outline-hidden"
             />
             <button
               type="button"
               onClick={handleAddPartner}
-              className="flex items-center gap-1 px-3.5 py-2 text-xs font-semibold text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl whitespace-nowrap cursor-pointer transition-colors"
+              className="flex items-center gap-1 px-3.5 py-2 text-xs font-semibold text-foreground bg-muted hover:bg-muted/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden rounded-xl whitespace-nowrap cursor-pointer transition-colors"
             >
-              <UserPlus className="w-3.5 h-3.5" />
-              <span>Add Member</span>
+              <UserPlus className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>Add member</span>
             </button>
           </div>
         </div>
 
+        {/* Inline Reset Confirmation (replaces banned window.confirm) */}
+        {showResetConfirm && (
+          <div className="p-4 rounded-xl border border-destructive/30 bg-destructive/5 space-y-3" role="alert">
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" aria-hidden="true" />
+              <div>
+                <h4 className="text-xs font-bold text-destructive">Confirm data reset</h4>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Reset all records, alerts, and tasks to the original IBM HR benchmark defaults? Custom modifications will be replaced.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setShowResetConfirm(false)}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-border bg-card text-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={executeReset}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-destructive text-destructive-foreground hover:opacity-90 focus-visible:ring-2 focus-visible:ring-destructive focus-visible:outline-hidden"
+              >
+                Yes, reset data
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Action Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-slate-200">
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-border">
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={handleResetData}
-              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 border border-rose-200 rounded-xl transition-colors whitespace-nowrap cursor-pointer"
+              onClick={() => setShowResetConfirm(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-destructive hover:bg-destructive/10 border border-destructive/20 focus-visible:ring-2 focus-visible:ring-destructive focus-visible:outline-hidden rounded-xl transition-colors whitespace-nowrap cursor-pointer"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset Benchmark Data</span>
+              <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>Reset benchmark data</span>
             </button>
             <button
               type="button"
               onClick={handleExportJSON}
-              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-300 rounded-xl transition-colors whitespace-nowrap cursor-pointer shadow-2xs"
+              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground bg-card hover:bg-muted border border-border focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden rounded-xl transition-colors whitespace-nowrap cursor-pointer shadow-2xs"
             >
-              <Download className="w-3.5 h-3.5" />
-              <span>Export JSON Backup</span>
+              <Download className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>Export JSON backup</span>
             </button>
           </div>
 
           <button
             type="submit"
-            className="flex items-center gap-1.5 px-5 py-2.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-colors whitespace-nowrap shadow-sm cursor-pointer"
+            className="flex items-center gap-1.5 px-5 py-2.5 text-xs font-semibold text-primary-foreground bg-primary hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden rounded-xl transition-colors whitespace-nowrap shadow-xs cursor-pointer"
           >
-            <Save className="w-4 h-4" />
-            <span>Save Settings</span>
+            <Save className="w-4 h-4" aria-hidden="true" />
+            <span>Save settings</span>
           </button>
         </div>
       </form>

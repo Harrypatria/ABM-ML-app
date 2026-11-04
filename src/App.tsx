@@ -19,7 +19,7 @@ export default function App() {
   const [todoTaskCount, setTodoTaskCount] = useState(0);
   const [language, setLanguage] = useState<Language>(getPreferredLanguage());
 
-  // Listen to auth changes
+  // Listen to auth state changes
   useEffect(() => {
     const handleAuthChange = () => {
       setIsAuthed(isAuthenticated());
@@ -28,7 +28,7 @@ export default function App() {
     return () => window.removeEventListener('app_auth_changed', handleAuthChange);
   }, []);
 
-  // Auto-initialize full 1,470 employee cohort from the attached CSV on initial load
+  // Auto-initialize 1,470 employee cohort from attached CSV on initial load
   useEffect(() => {
     initDatasetFromAttachedCsv(false).then(() => {
       syncCounts();
@@ -55,14 +55,14 @@ export default function App() {
     setPreferredLanguage(nextLang);
   };
 
-  // If user is not authenticated, display the responsive, minimalist, and modern landing page
+  // If user is unauthenticated, render the responsive landing page
   if (!isAuthed) {
     return <LandingPage onSuccessAuth={() => setIsAuthed(true)} />;
   }
 
-  // Once authenticated, display the main retention command center with light background
+  // When authenticated, render the primary retention command center
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-cyan-500/20 selection:text-cyan-950">
+    <div className="min-h-dvh bg-background text-foreground flex flex-col font-sans">
       {/* Top Bar Navigation */}
       <Navbar
         activeTab={activeTab}
@@ -90,19 +90,19 @@ export default function App() {
         {activeTab === 'settings' && <SettingsView />}
       </main>
 
-      {/* Clean Editorial Light Theme Footer */}
-      <footer className="border-t border-slate-200 bg-white py-6 text-xs text-slate-500">
+      {/* Editorial Footer */}
+      <footer className="border-t border-border bg-card py-6 text-xs text-muted-foreground">
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-700">Attrition Predictor Pro</span>
+            <span className="font-semibold text-foreground">Attrition Predictor Pro</span>
             <span aria-hidden="true">·</span>
-            <span>ITDO Framework (Insights → Triggers → Decisions → Operations)</span>
+            <span>ITDO framework (Insights → Triggers → Decisions → Operations)</span>
           </div>
 
-          <div className="flex items-center gap-3 text-slate-500 font-mono text-[11px]">
-            <span>Model: GradientBoosting v1.0.0</span>
+          <div className="flex items-center gap-3 text-muted-foreground font-mono text-[11px]">
+            <span>GradientBoosting v1.0.0</span>
             <span aria-hidden="true">·</span>
-            <span>SHAP TreeExplainer Enabled</span>
+            <span>SHAP TreeExplainer</span>
             <span aria-hidden="true">·</span>
             <span>Holdout AUC: 0.8742</span>
           </div>
