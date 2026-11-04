@@ -18,13 +18,17 @@ export const RiskGauge: React.FC<RiskGaugeProps> = ({ probability, riskLevel, si
   const strokeDashoffset = arcLength - (percentage / 100) * arcLength;
 
   let strokeColor = '#10b981'; // green for LOW
-  let badgeColor = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30';
+  let badgeColor = 'text-emerald-800 bg-emerald-50 border-emerald-200';
+  let badgeText = 'Low Flight Risk';
+
   if (riskLevel === 'MEDIUM') {
     strokeColor = '#f59e0b'; // amber
-    badgeColor = 'text-amber-400 bg-amber-500/10 border-amber-500/30';
+    badgeColor = 'text-amber-800 bg-amber-50 border-amber-200';
+    badgeText = 'Moderate Flight Risk';
   } else if (riskLevel === 'HIGH') {
-    strokeColor = '#f43f5e'; // rose/red
-    badgeColor = 'text-rose-400 bg-rose-500/10 border-rose-500/30';
+    strokeColor = '#e11d48'; // rose
+    badgeColor = 'text-rose-800 bg-rose-50 border-rose-200';
+    badgeText = 'High Departure Risk';
   }
 
   const rotation = 135;
@@ -39,7 +43,7 @@ export const RiskGauge: React.FC<RiskGaugeProps> = ({ probability, riskLevel, si
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke="rgba(51, 65, 85, 0.35)"
+            stroke="rgba(226, 232, 240, 0.9)"
             strokeWidth={strokeWidth}
             strokeDasharray={`${arcLength} ${circumference}`}
             strokeDashoffset={0}
@@ -64,20 +68,18 @@ export const RiskGauge: React.FC<RiskGaugeProps> = ({ probability, riskLevel, si
 
         {/* Center Readout */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pt-2">
-          <span className="text-3xl font-bold font-mono tracking-tight tabular-nums text-slate-100">
+          <span className="text-3xl font-bold font-mono tracking-tight tabular-nums text-slate-900">
             {percentage}%
           </span>
-          <span className="text-[11px] font-medium uppercase tracking-wider text-slate-400 mt-0.5">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 mt-0.5">
             Flight Probability
           </span>
         </div>
       </div>
 
       {/* Risk Badge */}
-      <div
-        className={`px-3 py-1 rounded-md text-xs font-semibold uppercase tracking-wider border -mt-2 transition-colors ${badgeColor}`}
-      >
-        {riskLevel} FLIGHT RISK
+      <div className={`mt-2 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide border ${badgeColor}`}>
+        {badgeText}
       </div>
     </div>
   );

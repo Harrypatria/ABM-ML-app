@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar, NavTab } from './components/Navbar';
+import { LandingPage } from './components/LandingPage';
 import { DashboardView } from './components/DashboardView';
 import { PredictorView } from './components/PredictorView';
 import { BatchView } from './components/BatchView';
@@ -9,12 +10,23 @@ import { ModelView } from './components/ModelView';
 import { SettingsView } from './components/SettingsView';
 import { getAlerts, getTasks, StorageEvent, initDatasetFromAttachedCsv } from './lib/storage';
 import { getPreferredLanguage, setPreferredLanguage, Language } from './lib/i18n';
+import { isAuthenticated } from './lib/auth';
 
 export default function App() {
+  const [isAuthed, setIsAuthed] = useState<boolean>(isAuthenticated());
   const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
   const [openAlertCount, setOpenAlertCount] = useState(0);
   const [todoTaskCount, setTodoTaskCount] = useState(0);
   const [language, setLanguage] = useState<Language>(getPreferredLanguage());
+
+  // Listen to auth changes
+  useEffect(() => {
+    const handleAuthChange = () => {
+      setIsAuthed(isAuthenticated());
+    };
+    window.addEventListener('app_auth_changed', handleAuthChange);
+    return () => window.removeEventListener('app_auth_changed', handleAuthChange);
+  }, []);
 
   // Auto-initialize full 1,470 employee cohort from the attached CSV on initial load
   useEffect(() => {
@@ -43,9 +55,15 @@ export default function App() {
     setPreferredLanguage(nextLang);
   };
 
+  // If user is not authenticated, display the responsive, minimalist, and modern landing page
+  if (!isAuthed) {
+    return <LandingPage onSuccessAuth={() => setIsAuthed(true)} />;
+  }
+
+  // Once authenticated, display the main retention command center with light background
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-cyan-500/20 selection:text-cyan-200">
-      {/* Top Bar Contract (Wordmark, Nav Links, Primary Action) */}
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-cyan-500/20 selection:text-cyan-950">
+      {/* Top Bar Navigation */}
       <Navbar
         activeTab={activeTab}
         onSelectTab={setActiveTab}
@@ -53,6 +71,7 @@ export default function App() {
         taskTodoCount={todoTaskCount}
         currentLanguage={language}
         onToggleLanguage={handleToggleLanguage}
+        onSignOut={() => setIsAuthed(false)}
       />
 
       {/* Main View Area */}
@@ -71,16 +90,16 @@ export default function App() {
         {activeTab === 'settings' && <SettingsView />}
       </main>
 
-      {/* Clean Editorial Footer */}
-      <footer className="border-t border-slate-800/80 bg-slate-950 py-6 text-xs text-slate-400">
+      {/* Clean Editorial Light Theme Footer */}
+      <footer className="border-t border-slate-200 bg-white py-6 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-300">Attrition Predictor Pro</span>
+            <span className="font-semibold text-slate-700">Attrition Predictor Pro</span>
             <span aria-hidden="true">·</span>
             <span>ITDO Framework (Insights → Triggers → Decisions → Operations)</span>
           </div>
 
-          <div className="flex items-center gap-3 text-slate-400 font-mono text-[11px]">
+          <div className="flex items-center gap-3 text-slate-500 font-mono text-[11px]">
             <span>Model: GradientBoosting v1.0.0</span>
             <span aria-hidden="true">·</span>
             <span>SHAP TreeExplainer Enabled</span>

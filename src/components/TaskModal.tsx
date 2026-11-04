@@ -17,16 +17,16 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   initialData,
 }) => {
   const settings = getSettings();
-  const [title, setTitle] = useState(initialData?.title || 'Retention Plan: Intervention Follow-Up');
+  const [title, setTitle] = useState(initialData?.title || 'Retention Plan: Workload & Compensation Review');
   const [employeeName, setEmployeeName] = useState(initialData?.employeeName || 'Alex Vance');
   const [employeeRef, setEmployeeRef] = useState(initialData?.employeeRef || 'EMP-1042');
   const [intervention, setIntervention] = useState(
     initialData?.intervention ||
-      'Implement flexible work arrangements & enforce 15% overtime cap policy.'
+      'Conduct 1-on-1 stay interview to evaluate workload balance and review market equity adjustments.'
   );
   const [description, setDescription] = useState(
     initialData?.description ||
-      'Schedule 1:1 meeting with employee and team lead to review workload allocation and compensation trajectory.'
+      'Schedule a structured check-in with the employee and team lead to discuss career pathing and cap excess overtime.'
   );
   const [priority, setPriority] = useState<TaskPriority>(initialData?.priority || 'HIGH');
   const [status, setStatus] = useState<TaskStatus>(initialData?.status || 'TODO');
@@ -62,157 +62,144 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/90">
-          <div className="flex items-center gap-2.5">
-            <ShieldAlert className="w-5 h-5 text-cyan-400" />
-            <div>
-              <h3 className="text-base font-semibold text-slate-100">
-                {initialData?.id ? 'Edit Retention Task' : 'Create Retention Intervention Task'}
-              </h3>
-              <p className="text-xs text-slate-400">
-                ITDO Operations Layer · Track action execution to closure
-              </p>
-            </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
+        {/* Modal Header */}
+        <div className="px-6 py-4.5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+          <div>
+            <h3 className="text-base font-bold text-slate-900">
+              {initialData?.id ? 'Edit Retention Task' : 'Create Retention Task'}
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Assign evidence-based actions to your HRBP team to mitigate voluntary departure risk.
+            </p>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+            className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Form Body */}
+        {/* Modal Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Employee Name</label>
-              <input
-                type="text"
-                required
-                value={employeeName}
-                onChange={(e) => setEmployeeName(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-cyan-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Employee ID / Ref</label>
-              <input
-                type="text"
-                required
-                value={employeeRef}
-                onChange={(e) => setEmployeeRef(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-sm font-mono text-slate-100 focus:outline-none focus:border-cyan-500"
-              />
-            </div>
-          </div>
-
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">Task Title</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Task Title</label>
             <input
               type="text"
-              required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-cyan-500"
+              required
+              className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-600"
             />
           </div>
 
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Employee Name</label>
+              <input
+                type="text"
+                value={employeeName}
+                onChange={(e) => setEmployeeName(e.target.value)}
+                required
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-600"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Employee ID</label>
+              <input
+                type="text"
+                value={employeeRef}
+                onChange={(e) => setEmployeeRef(e.target.value)}
+                required
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-600"
+              />
+            </div>
+          </div>
+
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">Prescribed Intervention</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Prescribed Retention Action
+            </label>
             <textarea
               rows={2}
-              required
               value={intervention}
               onChange={(e) => setIntervention(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-cyan-500 leading-relaxed"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">Operational Details & Notes</label>
-            <textarea
-              rows={3}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-cyan-500 leading-relaxed"
+              className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-600"
             />
           </div>
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Priority</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Priority</label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as TaskPriority)}
-                className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-cyan-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-cyan-600"
               >
-                <option value="CRITICAL">Critical (&gt;80% Risk)</option>
-                <option value="HIGH">High Risk</option>
-                <option value="MEDIUM">Medium Risk</option>
-                <option value="LOW">Low Risk</option>
+                <option value="CRITICAL">Critical</option>
+                <option value="HIGH">High</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="LOW">Low</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Status</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Status</label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as TaskStatus)}
-                className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-cyan-500"
+                className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-cyan-600"
               >
                 <option value="TODO">To Do</option>
                 <option value="IN_PROGRESS">In Progress</option>
                 <option value="DONE">Completed</option>
-                <option value="CANCELLED">Cancelled</option>
+                <option value="CANCELLED">Archived</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Due Date</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Due Date</label>
               <input
                 type="date"
-                required
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-sm font-mono text-slate-100 focus:outline-none focus:border-cyan-500"
+                required
+                className="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-xs text-slate-900 focus:outline-none focus:border-cyan-600 font-mono"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">Assign to HR Business Partner</label>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">Assigned HRBP</label>
             <select
               value={assignedTo}
               onChange={(e) => setAssignedTo(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-700/80 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-cyan-500"
+              className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-cyan-600"
             >
-              {settings.hrPartners.map((partner) => (
-                <option key={partner} value={partner}>
-                  {partner}
+              {settings.hrPartners.map((p) => (
+                <option key={p} value={p}>
+                  {p}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Footer Controls */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+          {/* Action Buttons */}
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-medium text-slate-300 hover:text-slate-100 hover:bg-slate-800 rounded-lg transition-colors whitespace-nowrap shrink-0"
+              className="px-4 py-2 text-xs font-semibold rounded-xl text-slate-700 hover:bg-slate-100 border border-slate-300 transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-950 bg-cyan-400 hover:bg-cyan-300 rounded-lg transition-colors whitespace-nowrap shrink-0 shadow-lg shadow-cyan-500/20"
+              className="px-4 py-2 text-xs font-semibold rounded-xl text-white bg-slate-900 hover:bg-slate-800 transition-colors shadow-xs cursor-pointer"
             >
-              <CheckCircle2 className="w-4 h-4" />
-              <span>{initialData?.id ? 'Save Changes' : 'Create Task'}</span>
+              Save Retention Task
             </button>
           </div>
         </form>

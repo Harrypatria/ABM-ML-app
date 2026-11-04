@@ -32,26 +32,26 @@ export const ShapWaterfall: React.FC<ShapWaterfallProps> = ({
   }));
 
   return (
-    <div className="w-full bg-slate-900/60 rounded-xl p-4 border border-slate-800">
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2 border-b border-slate-800/80">
+    <div className="w-full bg-white rounded-xl p-4.5 border border-slate-200 shadow-xs">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2.5 border-b border-slate-100">
         <div>
-          <h4 className="text-sm font-semibold text-slate-200">SHAP Local Feature Attributions</h4>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Marginal probability contribution relative to benchmark baseline
+          <h4 className="text-sm font-semibold text-slate-900">SHAP Root-Cause Drivers</h4>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Marginal probability contribution relative to the company benchmark baseline (16.1%)
           </p>
         </div>
         <div className="flex items-center gap-4 text-xs font-mono">
-          <div className="flex items-center gap-1.5 text-slate-400">
-            <span className="w-2.5 h-2.5 rounded-sm bg-slate-600 inline-block" />
-            <span>E[f(X)]: {(baseValue * 100).toFixed(1)}%</span>
+          <div className="flex items-center gap-1.5 text-slate-600">
+            <span className="w-2.5 h-2.5 rounded-sm bg-slate-300 inline-block" />
+            <span>Baseline: {(baseValue * 100).toFixed(1)}%</span>
           </div>
-          <div className="flex items-center gap-1.5 text-rose-400">
+          <div className="flex items-center gap-1.5 text-rose-700">
             <span className="w-2.5 h-2.5 rounded-sm bg-rose-500 inline-block" />
             <span>Increases Risk</span>
           </div>
-          <div className="flex items-center gap-1.5 text-cyan-400">
-            <span className="w-2.5 h-2.5 rounded-sm bg-cyan-500 inline-block" />
-            <span>Protective</span>
+          <div className="flex items-center gap-1.5 text-emerald-700">
+            <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500 inline-block" />
+            <span>Reduces Risk</span>
           </div>
         </div>
       </div>
@@ -67,46 +67,53 @@ export const ShapWaterfall: React.FC<ShapWaterfallProps> = ({
               type="number"
               domain={[-30, 35]}
               unit="%"
-              tick={{ fill: '#94a3b8', fontSize: 11 }}
-              tickLine={{ stroke: '#334155' }}
-              axisLine={{ stroke: '#334155' }}
+              tick={{ fill: '#475569', fontSize: 11 }}
+              tickLine={{ stroke: '#cbd5e1' }}
+              axisLine={{ stroke: '#cbd5e1' }}
             />
             <YAxis
               type="category"
               dataKey="feature"
               width={140}
-              tick={{ fill: '#cbd5e1', fontSize: 12, fontWeight: 500 }}
+              tick={{ fill: '#1e293b', fontSize: 12, fontWeight: 500 }}
               tickLine={false}
-              axisLine={{ stroke: '#334155' }}
+              axisLine={{ stroke: '#cbd5e1' }}
             />
             <Tooltip
-              cursor={{ fill: 'rgba(51, 65, 85, 0.3)' }}
+              cursor={{ fill: 'rgba(241, 245, 249, 0.7)' }}
               content={({ active, payload }) => {
                 if (active && payload && payload.length) {
-                  const data = payload[0].payload;
-                  const isPositive = data.impactPct > 0;
+                  const d = payload[0].payload;
+                  const isPos = d.impactPct > 0;
                   return (
-                    <div className="bg-slate-900 border border-slate-700 shadow-xl rounded-lg p-3 max-w-xs text-xs">
-                      <div className="font-semibold text-slate-100 flex items-center justify-between gap-2 mb-1">
-                        <span>{data.feature}</span>
-                        <span className="font-mono text-slate-400">{data.value}</span>
+                    <div className="bg-white border border-slate-200 shadow-xl rounded-xl p-3 text-xs max-w-xs">
+                      <div className="font-semibold text-slate-900 mb-1">{d.feature}</div>
+                      <div className="text-[11px] text-slate-600 mb-2">
+                        Observed value: <strong className="text-slate-900">{d.value}</strong>
                       </div>
-                      <div className={`font-mono font-medium mb-1.5 ${isPositive ? 'text-rose-400' : 'text-cyan-400'}`}>
-                        {isPositive ? '+' : ''}{data.impactPct}% attrition probability delta
+                      <div
+                        className={`font-mono font-semibold text-xs mb-1.5 ${
+                          isPos ? 'text-rose-600' : 'text-emerald-600'
+                        }`}
+                      >
+                        {isPos ? '+' : ''}
+                        {d.impactPct}% shift on flight probability
                       </div>
-                      <p className="text-slate-300 leading-relaxed">{data.description}</p>
+                      <p className="text-[11px] text-slate-500 leading-relaxed border-t border-slate-100 pt-1.5">
+                        {d.description}
+                      </p>
                     </div>
                   );
                 }
                 return null;
               }}
             />
-            <ReferenceLine x={0} stroke="#64748b" strokeDasharray="3 3" />
-            <Bar dataKey="impactPct" radius={[4, 4, 4, 4]}>
+            <ReferenceLine x={0} stroke="#94a3b8" strokeDasharray="3 3" />
+            <Bar dataKey="impactPct" radius={[0, 4, 4, 0]}>
               {chartData.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
-                  fill={entry.impactPct >= 0 ? '#f43f5e' : '#06b6d4'}
+                  fill={entry.direction === 'increases' ? '#f43f5e' : '#10b981'}
                 />
               ))}
             </Bar>
@@ -114,13 +121,13 @@ export const ShapWaterfall: React.FC<ShapWaterfallProps> = ({
         </ResponsiveContainer>
       </div>
 
-      <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-800/80 text-xs text-slate-400">
-        <span className="font-mono">Base Rate: {(baseValue * 100).toFixed(1)}%</span>
-        <span className="font-medium text-slate-300">
-          Net Attributed Probability:{' '}
-          <span className="font-mono font-semibold text-cyan-400 tabular-nums">
+      <div className="mt-2 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+        <span>Model Base Value: {(baseValue * 100).toFixed(1)}%</span>
+        <span>
+          Net Calibrated Outcome:{' '}
+          <strong className="font-mono text-slate-900 text-xs">
             {(finalProbability * 100).toFixed(1)}%
-          </span>
+          </strong>
         </span>
       </div>
     </div>

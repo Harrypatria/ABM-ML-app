@@ -140,9 +140,9 @@ export const BatchView: React.FC<BatchViewProps> = ({ onSelectEmployeeForSimulat
     try {
       const data = await initDatasetFromAttachedCsv(true);
       setEmployees(data);
-      showToast(`Berhasil memuat ulang ${data.length.toLocaleString()} data karyawan dari file lampiran CSV!`);
+      showToast(`Successfully reloaded ${data.length.toLocaleString()} employee records from attached dataset.`);
     } catch {
-      showToast('Gagal memuat dataset dari file lampiran.');
+      showToast('Unable to load attached dataset. Please check the file path.');
     } finally {
       setIsLoadingDataset(false);
     }
@@ -159,15 +159,15 @@ export const BatchView: React.FC<BatchViewProps> = ({ onSelectEmployeeForSimulat
         const text = event.target?.result as string;
         const parsed = parseHrCsv(text);
         if (parsed.length === 0) {
-          showToast('CSV tidak memiliki format baris data yang valid.');
+          showToast('The uploaded CSV does not contain valid employee records.');
           return;
         }
 
         saveBatchEmployees(parsed);
         setEmployees(getEmployees());
-        showToast(`Berhasil mengimpor ${parsed.length} data karyawan!`);
-      } catch (err) {
-        showToast('Gagal memproses file CSV: periksa struktur kolom.');
+        showToast(`Successfully imported ${parsed.length.toLocaleString()} employees.`);
+      } catch {
+        showToast('Failed to parse CSV file. Please verify columns match the benchmark format.');
       }
     };
     reader.readAsText(file);
@@ -177,7 +177,7 @@ export const BatchView: React.FC<BatchViewProps> = ({ onSelectEmployeeForSimulat
   // Export scored dataset as CSV
   const handleExportCSV = () => {
     const headers = [
-      'EmployeeNumber',
+      'EmployeeID',
       'FullName',
       'Department',
       'JobRole',
@@ -185,10 +185,10 @@ export const BatchView: React.FC<BatchViewProps> = ({ onSelectEmployeeForSimulat
       'MonthlyIncome',
       'OverTime',
       'YearsAtCompany',
-      'ActualAttrition_GroundTruth',
+      'ActualAttrition_Historical',
       'Predicted_Flight_Probability',
-      'Predicted_Risk_Level',
-      'Top_SHAP_Driver',
+      'Risk_Level',
+      'Primary_Driver',
     ];
 
     const rows = filteredList.map((item) => [
@@ -211,7 +211,7 @@ export const BatchView: React.FC<BatchViewProps> = ({ onSelectEmployeeForSimulat
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `Attrition_Predictor_Scored_Cohort_${Date.now()}.csv`);
+    link.setAttribute('download', `Retention_Scored_Cohort_${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -233,37 +233,37 @@ export const BatchView: React.FC<BatchViewProps> = ({ onSelectEmployeeForSimulat
       status: 'OPEN',
       assignedTo: 'Marcus Vance (Senior HRBP, Engineering & R&D)',
       topDriver: item.prediction.topRiskFactors[0]?.description || 'Multiple High Risk Indicators',
-      notes: `Batch flagged. Actual Status: ${item.profile.actualAttrition === 'Yes' ? 'Departed' : 'Active'}.`,
+      notes: `Batch flagged. Historical Status: ${item.profile.actualAttrition === 'Yes' ? 'Departed' : 'Active'}.`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
-    showToast(`Peringatan risiko retensi dibuat untuk ${item.profile.fullName}`);
+    showToast(`Risk alert created for ${item.profile.fullName}.`);
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
       {/* Toast Feedback */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 border border-cyan-500/50 text-cyan-200 px-4 py-2.5 rounded-xl shadow-xl text-xs flex items-center gap-2 animate-bounce">
-          <CheckCircle2 className="w-4 h-4 text-cyan-400" />
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 border border-slate-700 text-white px-4 py-3 rounded-2xl shadow-xl text-xs flex items-center gap-2.5 animate-fadeIn">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
           <span>{toastMessage}</span>
         </div>
       )}
 
       {/* Header and Dataset Info */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
           <div className="flex items-center gap-2.5">
-            <h2 className="text-2xl font-display font-bold text-slate-100">
-              Batch Scoring & Data Explorer
+            <h2 className="text-2xl font-display font-bold text-slate-900">
+              Cohort Explorer & Batch Scoring
             </h2>
-            <span className="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5">
-              <Database className="w-3 h-3 text-emerald-400" />
-              <span>1.470 Data Lampiran Aktif</span>
+            <span className="px-2.5 py-1 rounded-full text-xs font-mono font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1.5">
+              <Database className="w-3.5 h-3.5 text-emerald-600" />
+              <span>1,470 Benchmark Records</span>
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Eksplorasi kohort karyawan IBM HR Analytics, evaluasi probabilitas model ML, dan analisis perbandingan ground-truth.
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            Explore your full workforce cohort, compare predicted probabilities against historical departure labels, and export reports.
           </p>
         </div>
 
@@ -272,16 +272,16 @@ export const BatchView: React.FC<BatchViewProps> = ({ onSelectEmployeeForSimulat
           <button
             onClick={handleReloadAttachedDataset}
             disabled={isLoadingDataset}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 transition-colors whitespace-nowrap"
+            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 transition-colors whitespace-nowrap cursor-pointer shadow-2xs"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoadingDataset ? 'animate-spin text-cyan-400' : ''}`} />
-            <span>Muat Ulang CSV Lampiran</span>
+            <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${isLoadingDataset ? 'animate-spin text-cyan-600' : ''}`} />
+            <span>Reload Attached CSV</span>
           </button>
 
           {/* Upload Custom CSV */}
-          <label className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 cursor-pointer transition-colors whitespace-nowrap">
-            <UploadCloud className="w-3.5 h-3.5 text-slate-400" />
-            <span>Upload CSV Lain</span>
+          <label className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 cursor-pointer transition-colors whitespace-nowrap shadow-2xs">
+            <UploadCloud className="w-3.5 h-3.5 text-slate-500" />
+            <span>Upload New CSV</span>
             <input
               type="file"
               accept=".csv"
@@ -293,89 +293,89 @@ export const BatchView: React.FC<BatchViewProps> = ({ onSelectEmployeeForSimulat
           {/* Export Scored */}
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-slate-950 bg-cyan-400 hover:bg-cyan-300 rounded-lg transition-colors whitespace-nowrap shadow-sm"
+            className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors whitespace-nowrap shadow-sm cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Ekspor Hasil ({filteredList.length})</span>
+            <span>Export CSV ({filteredList.length.toLocaleString()})</span>
           </button>
         </div>
       </div>
 
       {/* Cohort Stats Ribbon */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3.5">
-          <div className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Total Kohort</div>
-          <div className="text-xl font-bold font-mono text-slate-100 mt-1 tabular-nums">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
+          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Headcount</div>
+          <div className="text-2xl font-bold font-mono text-slate-900 mt-1 tabular-nums">
             {cohortStats.total.toLocaleString()}
           </div>
-          <div className="text-[11px] text-slate-500 mt-0.5">Basis data IBM HR</div>
+          <div className="text-xs text-slate-500 mt-0.5">Benchmark dataset cohort</div>
         </div>
 
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3.5">
-          <div className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Historis Keluar (CSV)</div>
-          <div className="text-xl font-bold font-mono text-rose-400 mt-1 tabular-nums">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
+          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Historical Departures</div>
+          <div className="text-2xl font-bold font-mono text-rose-700 mt-1 tabular-nums">
             {cohortStats.actualExits.toLocaleString()} ({cohortStats.actualExitRate.toFixed(1)}%)
           </div>
-          <div className="text-[11px] text-slate-500 mt-0.5">Ground-truth label</div>
+          <div className="text-xs text-slate-500 mt-0.5">Ground-truth label in CSV</div>
         </div>
 
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3.5">
-          <div className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Terdeteksi Risiko Tinggi</div>
-          <div className="text-xl font-bold font-mono text-amber-400 mt-1 tabular-nums">
-            {cohortStats.highRiskCount} Karyawan
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
+          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Predicted High Risk</div>
+          <div className="text-2xl font-bold font-mono text-amber-700 mt-1 tabular-nums">
+            {cohortStats.highRiskCount} Employees
           </div>
-          <div className="text-[11px] text-slate-500 mt-0.5">Probabilitas &gt; 70%</div>
+          <div className="text-xs text-slate-500 mt-0.5">Probability &gt; 70% threshold</div>
         </div>
 
-        <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-3.5">
-          <div className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Rata-rata Gaji Bulanan</div>
-          <div className="text-xl font-bold font-mono text-slate-100 mt-1 tabular-nums">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
+          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Average Monthly Salary</div>
+          <div className="text-2xl font-bold font-mono text-slate-900 mt-1 tabular-nums">
             ${Math.round(cohortStats.avgSalary).toLocaleString()}
           </div>
-          <div className="text-[11px] text-slate-500 mt-0.5">Tolak ukur kompensasi</div>
+          <div className="text-xs text-slate-500 mt-0.5">Workforce compensation baseline</div>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+      <div className="bg-white border border-slate-200 rounded-2xl p-4.5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 shadow-xs">
         {/* Search */}
         <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
+          <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari berdasarkan nama, peran (Job Role), atau nomor induk (EMP-0001)..."
-            className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-4 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
+            placeholder="Search by employee name, role, or ID (e.g. EMP-0001)..."
+            className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-600 transition-colors"
           />
         </div>
 
         {/* Filter Dropdowns */}
         <div className="flex flex-wrap items-center gap-3 text-xs">
           {/* Status Attrisi Aktual (Ground Truth) */}
-          <div className="flex items-center gap-1.5 text-slate-400">
-            <span>Status CSV:</span>
+          <div className="flex items-center gap-1.5 text-slate-600">
+            <span className="font-semibold text-slate-700">Historical:</span>
             <select
               value={selectedAttrition}
               onChange={(e) => setSelectedAttrition(e.target.value)}
-              className="bg-slate-950 border border-slate-800 rounded px-2.5 py-1 text-slate-200 focus:outline-none focus:border-cyan-500"
+              className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 focus:outline-none focus:border-cyan-600"
             >
-              <option value="ALL">Semua ({cohortStats.total})</option>
-              <option value="Yes">Keluar (237)</option>
-              <option value="No">Aktif (1.233)</option>
+              <option value="ALL">All ({cohortStats.total})</option>
+              <option value="Yes">Departed (237)</option>
+              <option value="No">Retained (1,233)</option>
             </select>
           </div>
 
           {/* Department */}
-          <div className="flex items-center gap-1.5 text-slate-400">
-            <Filter className="w-3.5 h-3.5" />
-            <span>Dept:</span>
+          <div className="flex items-center gap-1.5 text-slate-600">
+            <Filter className="w-3.5 h-3.5 text-slate-400" />
+            <span className="font-semibold text-slate-700">Dept:</span>
             <select
               value={selectedDept}
               onChange={(e) => setSelectedDept(e.target.value)}
-              className="bg-slate-950 border border-slate-800 rounded px-2.5 py-1 text-slate-200 focus:outline-none focus:border-cyan-500"
+              className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 focus:outline-none focus:border-cyan-600"
             >
-              <option value="ALL">Semua Departemen</option>
+              <option value="ALL">All Departments</option>
               <option value="Research & Development">Research & Development</option>
               <option value="Sales">Sales</option>
               <option value="Human Resources">Human Resources</option>
@@ -383,59 +383,59 @@ export const BatchView: React.FC<BatchViewProps> = ({ onSelectEmployeeForSimulat
           </div>
 
           {/* Model Risk */}
-          <div className="flex items-center gap-1.5 text-slate-400">
-            <span>Model Risk:</span>
+          <div className="flex items-center gap-1.5 text-slate-600">
+            <span className="font-semibold text-slate-700">Risk:</span>
             <select
               value={selectedRisk}
               onChange={(e) => setSelectedRisk(e.target.value)}
-              className="bg-slate-950 border border-slate-800 rounded px-2.5 py-1 text-slate-200 focus:outline-none focus:border-cyan-500"
+              className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 focus:outline-none focus:border-cyan-600"
             >
-              <option value="ALL">Semua Tingkat Risiko</option>
-              <option value="HIGH">Tinggi (&gt;70%)</option>
-              <option value="MEDIUM">Sedang (40-70%)</option>
-              <option value="LOW">Rendah (&lt;40%)</option>
+              <option value="ALL">All Risk Tiers</option>
+              <option value="HIGH">High (&gt;70%)</option>
+              <option value="MEDIUM">Moderate (40-70%)</option>
+              <option value="LOW">Low (&lt;40%)</option>
             </select>
           </div>
 
           {/* Sort */}
-          <div className="flex items-center gap-1.5 text-slate-400">
-            <ArrowUpDown className="w-3.5 h-3.5" />
-            <span>Urutkan:</span>
+          <div className="flex items-center gap-1.5 text-slate-600">
+            <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
+            <span className="font-semibold text-slate-700">Sort:</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="bg-slate-950 border border-slate-800 rounded px-2.5 py-1 text-slate-200 focus:outline-none focus:border-cyan-500 font-mono text-[11px]"
+              className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-900 focus:outline-none focus:border-cyan-600 font-mono text-[11px]"
             >
-              <option value="prob_desc">Probabilitas (Tertinggi)</option>
-              <option value="prob_asc">Probabilitas (Terendah)</option>
-              <option value="income_desc">Gaji Bulanan (Tertinggi)</option>
-              <option value="tenure_desc">Masa Kerja (Tenure)</option>
+              <option value="prob_desc">Probability (Highest)</option>
+              <option value="prob_asc">Probability (Lowest)</option>
+              <option value="income_desc">Monthly Income (Highest)</option>
+              <option value="tenure_desc">Company Tenure (Highest)</option>
             </select>
           </div>
         </div>
       </div>
 
       {/* Cohort Table */}
-      <div className="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-950/80 border-b border-slate-800 text-slate-400 font-medium uppercase tracking-wider text-[11px]">
+            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
               <tr>
-                <th className="px-5 py-3.5">Karyawan</th>
-                <th className="px-4 py-3.5">Departemen / Peran</th>
-                <th className="px-4 py-3.5">Gaji Bulanan</th>
-                <th className="px-4 py-3.5">Lembur</th>
-                <th className="px-4 py-3.5">Status CSV (Asli)</th>
-                <th className="px-4 py-3.5">Prediksi Model ML</th>
-                <th className="px-4 py-3.5">Faktor Pendorong (SHAP)</th>
-                <th className="px-5 py-3.5 text-right">Aksi</th>
+                <th className="px-5 py-3.5">Employee</th>
+                <th className="px-4 py-3.5">Department & Role</th>
+                <th className="px-4 py-3.5">Monthly Income</th>
+                <th className="px-4 py-3.5">Overtime</th>
+                <th className="px-4 py-3.5">Historical Status</th>
+                <th className="px-4 py-3.5">Predicted Risk</th>
+                <th className="px-4 py-3.5">Primary SHAP Driver</th>
+                <th className="px-5 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-slate-100">
               {paginatedList.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-5 py-12 text-center text-slate-400 text-xs">
-                    Tidak ada data karyawan yang sesuai dengan kriteria pencarian.
+                  <td colSpan={8} className="px-5 py-12 text-center text-slate-500 text-xs">
+                    No employees found matching your criteria. Try resetting filters or search query.
                   </td>
                 </tr>
               ) : (
@@ -449,30 +449,30 @@ export const BatchView: React.FC<BatchViewProps> = ({ onSelectEmployeeForSimulat
                   return (
                     <tr
                       key={item.profile.id}
-                      className="hover:bg-slate-850/60 transition-colors group"
+                      className="hover:bg-slate-50/80 transition-colors group"
                     >
                       {/* Employee Ref & Name */}
-                      <td className="px-5 py-3">
-                        <div className="font-semibold text-slate-100">{item.profile.fullName}</div>
-                        <div className="text-[11px] font-mono text-slate-400">{item.profile.employeeRef}</div>
+                      <td className="px-5 py-3.5">
+                        <div className="font-semibold text-slate-900">{item.profile.fullName}</div>
+                        <div className="text-[11px] font-mono text-slate-500">{item.profile.employeeRef}</div>
                       </td>
 
                       {/* Dept & Role */}
-                      <td className="px-4 py-3">
-                        <div className="text-slate-300 font-medium">{item.profile.jobRole}</div>
-                        <div className="text-[11px] text-slate-400">{item.profile.department}</div>
+                      <td className="px-4 py-3.5">
+                        <div className="text-slate-800 font-medium">{item.profile.jobRole}</div>
+                        <div className="text-[11px] text-slate-500">{item.profile.department}</div>
                       </td>
 
                       {/* Monthly Income */}
-                      <td className="px-4 py-3 font-mono text-slate-200 tabular-nums">
+                      <td className="px-4 py-3.5 font-mono text-slate-900 tabular-nums">
                         ${item.profile.monthlyIncome.toLocaleString()}
                       </td>
 
                       {/* Overtime */}
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3.5">
                         <span
                           className={`font-mono text-[11px] font-semibold ${
-                            item.profile.overTime === 'Yes' ? 'text-rose-400' : 'text-slate-400'
+                            item.profile.overTime === 'Yes' ? 'text-rose-700' : 'text-slate-600'
                           }`}
                         >
                           {item.profile.overTime}
@@ -480,37 +480,37 @@ export const BatchView: React.FC<BatchViewProps> = ({ onSelectEmployeeForSimulat
                       </td>
 
                       {/* Ground Truth Status from CSV */}
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3.5">
                         {isActualDeparted ? (
-                          <span className="inline-flex items-center gap-1 font-mono text-[11px] font-semibold px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40">
-                            <AlertOctagon className="w-3 h-3 text-rose-400" />
-                            <span>Keluar (Yes)</span>
+                          <span className="inline-flex items-center gap-1 font-mono text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-50 text-rose-800 border border-rose-200">
+                            <AlertOctagon className="w-3 h-3 text-rose-600" />
+                            <span>Departed</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 font-mono text-[11px] font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                            <span>Aktif (No)</span>
+                          <span className="inline-flex items-center gap-1 font-mono text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            <span>Retained</span>
                           </span>
                         )}
                       </td>
 
                       {/* Probability & Badge */}
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3.5">
                         <div className="flex items-center gap-2">
                           <span
                             className={`font-mono font-bold text-sm tabular-nums ${
-                              isHigh ? 'text-rose-400' : isMed ? 'text-amber-400' : 'text-emerald-400'
+                              isHigh ? 'text-rose-700' : isMed ? 'text-amber-700' : 'text-emerald-700'
                             }`}
                           >
                             {probPct}%
                           </span>
                           <span
-                            className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded border ${
+                            className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${
                               isHigh
-                                ? 'bg-rose-500/10 text-rose-300 border-rose-500/30'
+                                ? 'bg-rose-50 text-rose-800 border-rose-200'
                                 : isMed
-                                ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
-                                : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                                ? 'bg-amber-50 text-amber-800 border-amber-200'
+                                : 'bg-emerald-50 text-emerald-800 border-emerald-200'
                             }`}
                           >
                             {item.prediction.riskLevel}
@@ -519,41 +519,41 @@ export const BatchView: React.FC<BatchViewProps> = ({ onSelectEmployeeForSimulat
                       </td>
 
                       {/* Top Driver */}
-                      <td className="px-4 py-3 max-w-[220px]">
+                      <td className="px-4 py-3.5 max-w-[220px]">
                         {topDriver ? (
                           <div
-                            className="text-[11px] truncate text-slate-300"
+                            className="text-[11px] truncate text-slate-700"
                             title={topDriver.description}
                           >
                             <span
                               className={`font-semibold mr-1 ${
-                                topDriver.direction === 'increases' ? 'text-rose-400' : 'text-emerald-400'
+                                topDriver.direction === 'increases' ? 'text-rose-700' : 'text-emerald-700'
                               }`}
                             >
                               {topDriver.direction === 'increases' ? '▲' : '▼'} {topDriver.feature}:
                             </span>
-                            <span className="text-slate-400">{topDriver.featureValue}</span>
+                            <span className="text-slate-500">{topDriver.featureValue}</span>
                           </div>
                         ) : (
-                          <span className="text-slate-500">—</span>
+                          <span className="text-slate-400">—</span>
                         )}
                       </td>
 
                       {/* Actions */}
-                      <td className="px-5 py-3 text-right">
+                      <td className="px-5 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => setInspectedEmployee(item)}
-                            title="Buka Waterfall SHAP"
-                            className="p-1.5 text-slate-400 hover:text-cyan-300 hover:bg-slate-800 rounded transition-colors"
+                            title="Inspect SHAP Explanation"
+                            className="p-1.5 text-slate-500 hover:text-cyan-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
 
                           <button
                             onClick={() => handleCreateAlert(item)}
-                            title="Kirim ke Peringatan Dini"
-                            className="p-1.5 text-slate-400 hover:text-rose-300 hover:bg-slate-800 rounded transition-colors"
+                            title="Create Risk Alert"
+                            className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                           >
                             <BellRing className="w-4 h-4" />
                           </button>
@@ -568,28 +568,28 @@ export const BatchView: React.FC<BatchViewProps> = ({ onSelectEmployeeForSimulat
         </div>
 
         {/* Pagination Bar */}
-        <div className="px-5 py-3.5 border-t border-slate-800 bg-slate-950/70 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+        <div className="px-5 py-3.5 border-t border-slate-200 bg-slate-50/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-600">
           <div className="flex items-center gap-2">
             <span>
-              Menampilkan{' '}
-              <span className="font-semibold text-slate-200">
+              Showing{' '}
+              <span className="font-semibold text-slate-900">
                 {filteredList.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}
               </span>{' '}
-              -{' '}
-              <span className="font-semibold text-slate-200">
+              to{' '}
+              <span className="font-semibold text-slate-900">
                 {Math.min(currentPage * pageSize, filteredList.length)}
               </span>{' '}
-              dari <span className="font-semibold text-slate-200">{filteredList.length.toLocaleString()}</span> data
+              of <span className="font-semibold text-slate-900">{filteredList.length.toLocaleString()}</span> employees
             </span>
 
-            <span className="text-slate-600">|</span>
+            <span className="text-slate-300">|</span>
 
             <span className="flex items-center gap-1.5">
-              <span>Per Halaman:</span>
+              <span>Per page:</span>
               <select
                 value={pageSize}
                 onChange={(e) => setPageSize(Number(e.target.value))}
-                className="bg-slate-950 border border-slate-800 rounded px-2 py-0.5 text-slate-200 focus:outline-none focus:border-cyan-500 font-mono text-xs"
+                className="bg-white border border-slate-300 rounded-lg px-2 py-0.5 text-slate-800 focus:outline-none focus:border-cyan-600 font-mono text-xs"
               >
                 <option value={25}>25</option>
                 <option value={50}>50</option>
@@ -602,22 +602,22 @@ export const BatchView: React.FC<BatchViewProps> = ({ onSelectEmployeeForSimulat
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="px-2.5 py-1 text-xs rounded border border-slate-800 bg-slate-900 text-slate-300 hover:text-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition-colors"
+              className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
-              <span>Sebelumnya</span>
+              <span>Previous</span>
             </button>
 
-            <span className="font-mono text-xs text-slate-300 px-2">
-              Halaman {currentPage} dari {totalPages}
+            <span className="font-mono text-xs text-slate-700 px-2 font-medium">
+              Page {currentPage} of {totalPages}
             </span>
 
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="px-2.5 py-1 text-xs rounded border border-slate-800 bg-slate-900 text-slate-300 hover:text-slate-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition-colors"
+              className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
             >
-              <span>Berikutnya</span>
+              <span>Next</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -626,24 +626,24 @@ export const BatchView: React.FC<BatchViewProps> = ({ onSelectEmployeeForSimulat
 
       {/* SHAP Inspection Drawer / Modal */}
       {inspectedEmployee && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div className="px-6 py-4.5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
               <div>
-                <h3 className="text-base font-semibold text-slate-100 flex items-center gap-2">
-                  <span>Penjelasan SHAP: {inspectedEmployee.profile.fullName}</span>
-                  <span className="font-mono text-xs text-slate-400">({inspectedEmployee.profile.employeeRef})</span>
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <span>SHAP Root Cause Explanation: {inspectedEmployee.profile.fullName}</span>
+                  <span className="font-mono text-xs text-slate-500">({inspectedEmployee.profile.employeeRef})</span>
                 </h3>
-                <p className="text-xs text-slate-400">
-                  {inspectedEmployee.profile.jobRole} · {inspectedEmployee.profile.department} · Status CSV:{' '}
-                  <span className={inspectedEmployee.profile.actualAttrition === 'Yes' ? 'text-rose-400 font-semibold' : 'text-emerald-400 font-semibold'}>
-                    {inspectedEmployee.profile.actualAttrition === 'Yes' ? 'Keluar' : 'Aktif'}
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {inspectedEmployee.profile.jobRole} · {inspectedEmployee.profile.department} · Historical Status:{' '}
+                  <span className={inspectedEmployee.profile.actualAttrition === 'Yes' ? 'text-rose-700 font-bold' : 'text-emerald-700 font-bold'}>
+                    {inspectedEmployee.profile.actualAttrition === 'Yes' ? 'Departed (Yes)' : 'Retained (No)'}
                   </span>
                 </p>
               </div>
               <button
                 onClick={() => setInspectedEmployee(null)}
-                className="p-1 text-slate-400 hover:text-slate-100 rounded-lg hover:bg-slate-800 transition-colors"
+                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -651,34 +651,31 @@ export const BatchView: React.FC<BatchViewProps> = ({ onSelectEmployeeForSimulat
 
             <div className="p-6 overflow-y-auto space-y-6">
               {/* Risk Summary Badge */}
-              <div className="flex items-center justify-between p-4 rounded-xl bg-slate-950/60 border border-slate-800">
+              <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-200">
                 <div>
-                  <div className="text-xs text-slate-400">Tingkat Risiko Model</div>
+                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Flight Risk Assessment</div>
                   <div
                     className={`text-xl font-bold font-mono mt-0.5 ${
                       inspectedEmployee.prediction.riskLevel === 'HIGH'
-                        ? 'text-rose-400'
+                        ? 'text-rose-700'
                         : inspectedEmployee.prediction.riskLevel === 'MEDIUM'
-                        ? 'text-amber-400'
-                        : 'text-emerald-400'
+                        ? 'text-amber-700'
+                        : 'text-emerald-700'
                     }`}
                   >
                     {(inspectedEmployee.prediction.attritionProbability * 100).toFixed(1)}% (
-                    {inspectedEmployee.prediction.riskLevel})
+                    {inspectedEmployee.prediction.riskLevel} Risk)
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <div className="text-xs text-slate-400">Prior Tolok Ukur E[f(x)]</div>
-                  <div className="text-base font-mono font-semibold text-slate-300">16,1%</div>
+                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Benchmark Baseline</div>
+                  <div className="text-base font-mono font-bold text-slate-700">16.1%</div>
                 </div>
               </div>
 
               {/* Waterfall Chart */}
               <div>
-                <h4 className="text-xs font-semibold text-slate-200 uppercase tracking-wider mb-2">
-                  Grafik Waterfall SHAP Lokal
-                </h4>
                 <ShapWaterfall
                   factors={inspectedEmployee.prediction.topRiskFactors}
                   baseValue={inspectedEmployee.prediction.baseValue}
@@ -688,42 +685,42 @@ export const BatchView: React.FC<BatchViewProps> = ({ onSelectEmployeeForSimulat
 
               {/* Prescribed Interventions */}
               <div>
-                <h4 className="text-xs font-semibold text-slate-200 uppercase tracking-wider mb-2">
-                  Tindakan Retensi yang Direkomendasikan
+                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2.5">
+                  Recommended Retention Action Plan
                 </h4>
                 <div className="space-y-2">
                   {inspectedEmployee.prediction.suggestedInterventions.map((act, i) => (
                     <div
                       key={i}
-                      className="p-3 rounded-lg bg-slate-950 border border-slate-800/80 text-xs text-slate-300 flex items-start gap-2.5"
+                      className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700 flex items-start gap-2.5"
                     >
-                      <span className="w-5 h-5 rounded-full bg-cyan-500/10 text-cyan-400 flex items-center justify-center font-mono text-[10px] shrink-0 mt-0.5">
+                      <span className="w-5 h-5 rounded-full bg-cyan-100 text-cyan-800 flex items-center justify-center font-mono text-[10px] font-bold shrink-0 mt-0.5">
                         {i + 1}
                       </span>
-                      <span>{act}</span>
+                      <span className="leading-relaxed">{act}</span>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
 
-            <div className="px-6 py-3 border-t border-slate-800 bg-slate-950/50 flex items-center justify-between">
+            <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
               <button
                 onClick={() => {
                   handleCreateAlert(inspectedEmployee);
                   setInspectedEmployee(null);
                 }}
-                className="px-3.5 py-1.5 text-xs font-medium rounded-lg bg-rose-500/10 text-rose-300 border border-rose-500/30 hover:bg-rose-500/20 transition-colors flex items-center gap-1.5"
+                className="px-4 py-2 text-xs font-semibold rounded-lg bg-rose-50 text-rose-800 border border-rose-200 hover:bg-rose-100 transition-colors flex items-center gap-1.5 cursor-pointer"
               >
                 <BellRing className="w-3.5 h-3.5" />
-                <span>Buat Peringatan Triggers</span>
+                <span>Create Risk Trigger</span>
               </button>
 
               <button
                 onClick={() => setInspectedEmployee(null)}
-                className="px-4 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors"
+                className="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-900 hover:bg-slate-800 text-white transition-colors cursor-pointer"
               >
-                Tutup
+                Close
               </button>
             </div>
           </div>

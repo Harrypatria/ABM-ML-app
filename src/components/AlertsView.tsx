@@ -66,14 +66,14 @@ export const AlertsView: React.FC = () => {
   const handleExportCSV = () => {
     const headers = [
       'AlertID',
-      'EmployeeRef',
+      'EmployeeID',
       'EmployeeName',
       'Department',
       'JobRole',
       'AttritionProbability',
       'Status',
       'AssignedTo',
-      'TopDriver',
+      'PrimaryDriver',
       'CreatedAt',
     ].join(',');
 
@@ -96,175 +96,128 @@ export const AlertsView: React.FC = () => {
     const encoded = encodeURI(csvContent);
     const link = document.createElement('a');
     link.href = encoded;
-    link.download = `Attrition_Alerts_Export_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `Retention_Triggers_Alerts_${new Date().toISOString().split('T')[0]}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-200">
         <div>
-          <h2 className="text-2xl font-display font-bold text-slate-100">
-            Alerts & Retention Triggers
+          <h2 className="text-2xl font-display font-bold text-slate-900">
+            Retention Triggers & Alerts Queue
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
-            ITDO Triggers Layer · Automated event detection at threshold boundary for HR Business Partners
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            ITDO Triggers Layer · Automated escalations for employees crossing the 70% departure probability threshold.
           </p>
         </div>
 
+        <button
+          onClick={handleExportCSV}
+          className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-300 rounded-lg transition-colors whitespace-nowrap shadow-2xs cursor-pointer"
+        >
+          <Download className="w-3.5 h-3.5" />
+          <span>Export Alerts CSV</span>
+        </button>
+      </div>
+
+      {/* KPI Status Ribbon */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Open Triggers */}
+        <div
+          onClick={() => setStatusFilter(statusFilter === 'OPEN' ? 'ALL' : 'OPEN')}
+          className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+            statusFilter === 'OPEN'
+              ? 'bg-rose-50/80 border-rose-300 shadow-sm'
+              : 'bg-white border-slate-200 hover:border-slate-300 shadow-xs'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-rose-800 uppercase tracking-wider">
+              Open Triggers (Needs Action)
+            </span>
+            <BellRing className="w-4 h-4 text-rose-600" />
+          </div>
+          <div className="text-2xl font-bold font-mono text-slate-900 mt-1 tabular-nums">
+            {openCount}
+          </div>
+          <div className="text-[11px] text-slate-500 mt-0.5">
+            Immediate HRBP review required
+          </div>
+        </div>
+
+        {/* Acknowledged */}
+        <div
+          onClick={() => setStatusFilter(statusFilter === 'ACKNOWLEDGED' ? 'ALL' : 'ACKNOWLEDGED')}
+          className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+            statusFilter === 'ACKNOWLEDGED'
+              ? 'bg-amber-50/80 border-amber-300 shadow-sm'
+              : 'bg-white border-slate-200 hover:border-slate-300 shadow-xs'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-amber-800 uppercase tracking-wider">
+              Under Review (Acknowledged)
+            </span>
+            <Clock className="w-4 h-4 text-amber-600" />
+          </div>
+          <div className="text-2xl font-bold font-mono text-slate-900 mt-1 tabular-nums">
+            {ackCount}
+          </div>
+          <div className="text-[11px] text-slate-500 mt-0.5">
+            Intervention strategy in formulation
+          </div>
+        </div>
+
+        {/* Resolved */}
+        <div
+          onClick={() => setStatusFilter(statusFilter === 'RESOLVED' ? 'ALL' : 'RESOLVED')}
+          className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+            statusFilter === 'RESOLVED'
+              ? 'bg-emerald-50/80 border-emerald-300 shadow-sm'
+              : 'bg-white border-slate-200 hover:border-slate-300 shadow-xs'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider">
+              Resolved Cases
+            </span>
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+          </div>
+          <div className="text-2xl font-bold font-mono text-slate-900 mt-1 tabular-nums">
+            {resolvedCount}
+          </div>
+          <div className="text-[11px] text-slate-500 mt-0.5">
+            Proactive retention plan assigned
+          </div>
+        </div>
+      </div>
+
+      {/* Filter and Bulk Actions Bar */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 shadow-xs">
+        {/* Multi-select and Bulk Assign */}
         <div className="flex items-center gap-3">
           <button
-            onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-slate-300 hover:text-slate-100 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition-colors whitespace-nowrap"
+            onClick={toggleSelectAll}
+            className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 cursor-pointer"
           >
-            <Download className="w-3.5 h-3.5" />
-            <span>Export Alerts</span>
+            {selectedAlertIds.length === filteredAlerts.length && filteredAlerts.length > 0 ? (
+              <CheckSquare className="w-4 h-4 text-cyan-600" />
+            ) : (
+              <Square className="w-4 h-4 text-slate-400" />
+            )}
+            <span>Select All ({selectedAlertIds.length})</span>
           </button>
-        </div>
-      </div>
 
-      {/* Threshold and Status Summary Strip */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Status Tab 1: All */}
-        <button
-          onClick={() => setStatusFilter('ALL')}
-          className={`p-4 rounded-xl border text-left transition-colors ${
-            statusFilter === 'ALL'
-              ? 'bg-slate-900 border-cyan-500/50'
-              : 'bg-slate-900/60 border-slate-800 hover:bg-slate-900'
-          }`}
-        >
-          <div className="text-xs text-slate-400 font-medium uppercase tracking-wider">All Triggers</div>
-          <div className="text-2xl font-bold font-mono text-slate-100 mt-1 tabular-nums">{alerts.length}</div>
-          <div className="text-[11px] text-slate-400 mt-0.5">Total recorded flight triggers</div>
-        </button>
-
-        {/* Status Tab 2: Open */}
-        <button
-          onClick={() => setStatusFilter('OPEN')}
-          className={`p-4 rounded-xl border text-left transition-colors ${
-            statusFilter === 'OPEN'
-              ? 'bg-rose-950/20 border-rose-500/50'
-              : 'bg-slate-900/60 border-slate-800 hover:bg-slate-900'
-          }`}
-        >
-          <div className="text-xs text-rose-400 font-medium uppercase tracking-wider flex items-center gap-1.5">
-            <BellRing className="w-3.5 h-3.5" />
-            <span>Unacknowledged</span>
-          </div>
-          <div className="text-2xl font-bold font-mono text-rose-400 mt-1 tabular-nums">{openCount}</div>
-          <div className="text-[11px] text-slate-400 mt-0.5">Requires immediate HR intervention</div>
-        </button>
-
-        {/* Status Tab 3: Acknowledged */}
-        <button
-          onClick={() => setStatusFilter('ACKNOWLEDGED')}
-          className={`p-4 rounded-xl border text-left transition-colors ${
-            statusFilter === 'ACKNOWLEDGED'
-              ? 'bg-amber-950/20 border-amber-500/50'
-              : 'bg-slate-900/60 border-slate-800 hover:bg-slate-900'
-          }`}
-        >
-          <div className="text-xs text-amber-400 font-medium uppercase tracking-wider flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5" />
-            <span>Acknowledged</span>
-          </div>
-          <div className="text-2xl font-bold font-mono text-amber-400 mt-1 tabular-nums">{ackCount}</div>
-          <div className="text-[11px] text-slate-400 mt-0.5">HRBP reviewing case context</div>
-        </button>
-
-        {/* Status Tab 4: Resolved */}
-        <button
-          onClick={() => setStatusFilter('RESOLVED')}
-          className={`p-4 rounded-xl border text-left transition-colors ${
-            statusFilter === 'RESOLVED'
-              ? 'bg-emerald-950/20 border-emerald-500/50'
-              : 'bg-slate-900/60 border-slate-800 hover:bg-slate-900'
-          }`}
-        >
-          <div className="text-xs text-emerald-400 font-medium uppercase tracking-wider flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Resolved</span>
-          </div>
-          <div className="text-2xl font-bold font-mono text-emerald-400 mt-1 tabular-nums">{resolvedCount}</div>
-          <div className="text-[11px] text-slate-400 mt-0.5">Intervention active / resolved</div>
-        </button>
-      </div>
-
-      {/* Threshold Slider and Filter Bar */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 space-y-3">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          {/* Threshold Slider */}
-          <div className="flex items-center gap-4 min-w-[280px]">
-            <span className="text-xs font-medium text-slate-300 whitespace-nowrap">
-              Threshold Cutoff:
-            </span>
-            <input
-              type="range"
-              min="40"
-              max="90"
-              step="5"
-              value={thresholdFilter}
-              onChange={(e) => setThresholdFilter(Number(e.target.value))}
-              className="w-36 accent-cyan-400 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
-            />
-            <span className="text-xs font-mono font-bold text-cyan-400 tabular-nums">
-              &gt;{thresholdFilter}%
-            </span>
-          </div>
-
-          {/* Filters */}
-          <div className="flex flex-wrap items-center gap-3 text-xs">
-            <div className="flex items-center gap-1.5 text-slate-400">
-              <Filter className="w-3.5 h-3.5" />
-              <span>Dept:</span>
-              <select
-                value={deptFilter}
-                onChange={(e) => setDeptFilter(e.target.value)}
-                className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-slate-200 focus:outline-none focus:border-cyan-500"
-              >
-                <option value="ALL">All Departments</option>
-                <option value="Research & Development">Research & Development</option>
-                <option value="Sales">Sales</option>
-                <option value="Human Resources">Human Resources</option>
-              </select>
-            </div>
-
-            <div className="flex items-center gap-1.5 text-slate-400">
-              <UserCheck className="w-3.5 h-3.5" />
-              <span>Assignee:</span>
-              <select
-                value={partnerFilter}
-                onChange={(e) => setPartnerFilter(e.target.value)}
-                className="bg-slate-950 border border-slate-800 rounded px-2 py-1 text-slate-200 focus:outline-none focus:border-cyan-500 max-w-[200px] truncate"
-              >
-                <option value="ALL">All Partners</option>
-                {settings.hrPartners.map((p) => (
-                  <option key={p} value={p}>
-                    {p}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Bulk Action Controls if items selected */}
-        {selectedAlertIds.length > 0 && (
-          <div className="pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs animate-in fade-in duration-150">
-            <div className="text-cyan-300 font-medium">
-              <span className="font-mono font-bold">{selectedAlertIds.length}</span> alerts selected
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400">Reassign to:</span>
+          {selectedAlertIds.length > 0 && (
+            <div className="flex items-center gap-2 pl-3 border-l border-slate-200">
               <select
                 value={bulkAssignee}
                 onChange={(e) => setBulkAssignee(e.target.value)}
-                className="bg-slate-950 border border-slate-700 rounded px-2.5 py-1 text-slate-200"
+                className="bg-slate-50 border border-slate-300 rounded-lg px-2 py-1 text-xs text-slate-900 focus:outline-none focus:border-cyan-600"
               >
                 {settings.hrPartners.map((p) => (
                   <option key={p} value={p}>
@@ -274,117 +227,154 @@ export const AlertsView: React.FC = () => {
               </select>
               <button
                 onClick={handleBulkAssign}
-                className="px-3 py-1 bg-cyan-400 hover:bg-cyan-300 text-slate-950 font-semibold rounded transition-colors whitespace-nowrap"
+                className="px-3 py-1 text-xs font-semibold rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white transition-colors cursor-pointer shadow-2xs"
               >
-                Apply Reassignment
+                Reassign Selected
               </button>
             </div>
+          )}
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-3 text-xs">
+          <div className="flex items-center gap-1.5 text-slate-600">
+            <span className="font-semibold text-slate-700">Threshold:</span>
+            <select
+              value={thresholdFilter}
+              onChange={(e) => setThresholdFilter(Number(e.target.value))}
+              className="bg-slate-50 border border-slate-300 rounded-lg px-2 py-1 text-slate-900 focus:outline-none focus:border-cyan-600"
+            >
+              <option value={70}>&ge; 70% (Critical)</option>
+              <option value={60}>&ge; 60%</option>
+              <option value={50}>&ge; 50%</option>
+              <option value={0}>All Risks</option>
+            </select>
           </div>
-        )}
+
+          <div className="flex items-center gap-1.5 text-slate-600">
+            <Filter className="w-3.5 h-3.5 text-slate-400" />
+            <span className="font-semibold text-slate-700">Dept:</span>
+            <select
+              value={deptFilter}
+              onChange={(e) => setDeptFilter(e.target.value)}
+              className="bg-slate-50 border border-slate-300 rounded-lg px-2 py-1 text-slate-900 focus:outline-none focus:border-cyan-600"
+            >
+              <option value="ALL">All Departments</option>
+              <option value="Research & Development">R&D</option>
+              <option value="Sales">Sales</option>
+              <option value="Human Resources">HR</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-1.5 text-slate-600">
+            <span className="font-semibold text-slate-700">Partner:</span>
+            <select
+              value={partnerFilter}
+              onChange={(e) => setPartnerFilter(e.target.value)}
+              className="bg-slate-50 border border-slate-300 rounded-lg px-2 py-1 text-slate-900 focus:outline-none focus:border-cyan-600 max-w-[150px] truncate"
+            >
+              <option value="ALL">All HRBPs</option>
+              {settings.hrPartners.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Alerts Table */}
-      <div className="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-950/80 border-b border-slate-800 text-slate-400 font-medium uppercase tracking-wider text-[11px]">
+            <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
               <tr>
-                <th className="px-4 py-3.5 w-10 text-center">
-                  <button onClick={toggleSelectAll} className="text-slate-400 hover:text-slate-200">
-                    {selectedAlertIds.length === filteredAlerts.length && filteredAlerts.length > 0 ? (
-                      <CheckSquare className="w-4 h-4 text-cyan-400" />
-                    ) : (
-                      <Square className="w-4 h-4" />
-                    )}
-                  </button>
-                </th>
+                <th className="w-10 px-4 py-3.5"></th>
                 <th className="px-4 py-3.5">Employee</th>
                 <th className="px-4 py-3.5">Department & Role</th>
-                <th className="px-4 py-3.5">Probability</th>
-                <th className="px-4 py-3.5">Key Trigger Driver</th>
+                <th className="px-4 py-3.5">Flight Probability</th>
+                <th className="px-4 py-3.5">Primary Root Driver</th>
+                <th className="px-4 py-3.5">Assigned HRBP</th>
                 <th className="px-4 py-3.5">Status</th>
-                <th className="px-4 py-3.5">Assigned HR Partner</th>
-                <th className="px-5 py-3.5 text-right">Action</th>
+                <th className="px-5 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody className="divide-y divide-slate-100">
               {filteredAlerts.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-5 py-12 text-center text-slate-400">
-                    No alerts match the chosen threshold ({thresholdFilter}%) and filters.
+                  <td colSpan={8} className="px-5 py-12 text-center text-slate-500 text-xs">
+                    No active triggers match your filter criteria. Your retention queue is up to date.
                   </td>
                 </tr>
               ) : (
                 filteredAlerts.map((alert) => {
-                  const probPct = Math.round(alert.attritionProbability * 100);
                   const isSelected = selectedAlertIds.includes(alert.id);
+                  const probPct = Math.round(alert.attritionProbability * 100);
 
                   return (
                     <tr
                       key={alert.id}
-                      className={`hover:bg-slate-850/60 transition-colors ${
-                        isSelected ? 'bg-cyan-950/20' : ''
+                      className={`hover:bg-slate-50/80 transition-colors ${
+                        isSelected ? 'bg-cyan-50/40' : ''
                       }`}
                     >
-                      {/* Checkbox */}
-                      <td className="px-4 py-3.5 text-center">
+                      <td className="px-4 py-3.5">
                         <button
                           onClick={() => toggleSelectOne(alert.id)}
-                          className="text-slate-400 hover:text-slate-200"
+                          className="text-slate-400 hover:text-slate-700 cursor-pointer"
                         >
                           {isSelected ? (
-                            <CheckSquare className="w-4 h-4 text-cyan-400" />
+                            <CheckSquare className="w-4 h-4 text-cyan-600" />
                           ) : (
                             <Square className="w-4 h-4" />
                           )}
                         </button>
                       </td>
 
-                      {/* Employee Ref & Name */}
                       <td className="px-4 py-3.5">
-                        <div className="font-semibold text-slate-100">{alert.employeeName}</div>
+                        <div className="font-semibold text-slate-900">{alert.employeeName}</div>
                         <div className="text-[11px] font-mono text-slate-500">{alert.employeeRef}</div>
                       </td>
 
-                      {/* Department & Role */}
                       <td className="px-4 py-3.5">
-                        <div className="text-slate-300 font-medium">{alert.jobRole}</div>
-                        <div className="text-[11px] text-slate-400">{alert.department}</div>
+                        <div className="text-slate-800 font-medium">{alert.jobRole}</div>
+                        <div className="text-[11px] text-slate-500">{alert.department}</div>
                       </td>
 
-                      {/* Probability */}
-                      <td className="px-4 py-3.5 font-mono">
-                        <span className="text-rose-400 font-bold text-sm tabular-nums">
-                          {probPct}%
-                        </span>
-                        <div className="text-[10px] text-slate-500 uppercase tracking-wider">
-                          Threshold &gt;{Math.round(alert.threshold * 100)}%
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono font-bold text-sm text-rose-700 tabular-nums">
+                            {probPct}%
+                          </span>
+                          <span className="text-[10px] font-bold text-rose-800 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200 uppercase">
+                            HIGH
+                          </span>
                         </div>
                       </td>
 
-                      {/* Top Driver & Notes */}
-                      <td className="px-4 py-3.5 max-w-xs">
-                        <div className="text-slate-200 font-medium truncate" title={alert.topDriver}>
+                      <td className="px-4 py-3.5 max-w-[200px]">
+                        <span className="truncate block text-slate-700 text-[11px]" title={alert.topDriver}>
                           {alert.topDriver}
-                        </div>
-                        {alert.notes && (
-                          <div className="text-[11px] text-slate-400 truncate mt-0.5 italic">
-                            "{alert.notes}"
-                          </div>
-                        )}
+                        </span>
                       </td>
 
-                      {/* Status Selector */}
+                      <td className="px-4 py-3.5 text-slate-700">
+                        <span className="truncate block max-w-[150px] font-medium" title={alert.assignedTo}>
+                          {alert.assignedTo}
+                        </span>
+                      </td>
+
                       <td className="px-4 py-3.5">
                         <select
                           value={alert.status}
                           onChange={(e) => updateAlertStatus(alert.id, e.target.value as AlertStatus)}
-                          className={`text-[11px] font-semibold uppercase px-2 py-1 rounded border bg-slate-950 cursor-pointer ${
+                          className={`font-semibold rounded-lg px-2 py-1 text-xs border cursor-pointer ${
                             alert.status === 'OPEN'
-                              ? 'text-rose-400 border-rose-500/40'
+                              ? 'bg-rose-50 text-rose-800 border-rose-200'
                               : alert.status === 'ACKNOWLEDGED'
-                              ? 'text-amber-400 border-amber-500/40'
-                              : 'text-emerald-400 border-emerald-500/40'
+                              ? 'bg-amber-50 text-amber-800 border-amber-200'
+                              : 'bg-emerald-50 text-emerald-800 border-emerald-200'
                           }`}
                         >
                           <option value="OPEN">Open</option>
@@ -393,27 +383,21 @@ export const AlertsView: React.FC = () => {
                         </select>
                       </td>
 
-                      {/* Assignee */}
-                      <td className="px-4 py-3.5 text-slate-300 text-[11px] truncate max-w-[160px]">
-                        {alert.assignedTo || 'Unassigned'}
-                      </td>
-
-                      {/* Actions */}
                       <td className="px-5 py-3.5 text-right">
                         <button
-                          onClick={() => {
+                          onClick={() =>
                             setTaskModalData({
                               alertId: alert.id,
                               employeeId: alert.employeeId,
                               employeeRef: alert.employeeRef,
                               employeeName: alert.employeeName,
-                              title: `Retention Task: ${alert.employeeName}`,
-                              intervention: alert.topDriver,
+                              title: `Retention Plan: ${alert.employeeName}`,
+                              description: `Follow-up on high flight risk trigger (${probPct}%). Key driver: ${alert.topDriver}.`,
                               priority: 'CRITICAL',
                               assignedTo: alert.assignedTo,
-                            });
-                          }}
-                          className="flex items-center gap-1 ml-auto px-2.5 py-1 text-[11px] font-semibold text-slate-950 bg-cyan-400 hover:bg-cyan-300 rounded transition-colors whitespace-nowrap"
+                            })
+                          }
+                          className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-colors inline-flex items-center gap-1 shadow-2xs cursor-pointer"
                         >
                           <ClipboardList className="w-3.5 h-3.5" />
                           <span>Create Task</span>
@@ -434,7 +418,7 @@ export const AlertsView: React.FC = () => {
           isOpen={true}
           onClose={() => setTaskModalData(null)}
           onSave={() => {
-            updateAlertStatus(taskModalData.alertId, 'ACKNOWLEDGED', 'Operational task assigned.');
+            updateAlertStatus(taskModalData.alertId, 'ACKNOWLEDGED');
             setTaskModalData(null);
           }}
           initialData={taskModalData}
